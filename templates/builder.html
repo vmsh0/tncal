@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+  <head>
+    <title>{{ config['APP_NAME'] }}</title>
+    <meta name="description" content="Get a sane iCalendar feed link from UNITN's shitty calendar
+    web app">
+    <meta name="author" content="Riccardo P. Bestetti">
+    <style>
+      table {
+        border-collapse: collapse;
+      }
+      table th, table td {
+        padding: 3px 10px;
+      }
+      table th {
+        background-color: #54585d;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 13px;
+        border: 1px solid #54585d;
+      }
+      table td {
+        color: #636363;
+        border: 1px solid #dddfe1;
+      }
+      table tr {
+        background-color: #f9fafb;
+      }
+      table tr:nth-child(odd) {
+        background-color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{ config['APP_NAME'] }}</h1>
+    <h2>Rationale, disclamer, and credits</h2>
+    <p>Use this webapp to easily search for courses and get a link to import them in any
+    iCalendar-compliant calendar app (e.g. Google Calendar), without fumbling around with ics files
+    and having to re-import stuff when the schedule changes.</p>
+    <p>This webapp is in no way associated to or endorsed by UNITN. It is also provided without any
+    guarantees about its operation. Use at your own risk!</p>
+    <p>This webapp has been brought to you by <a href="https://www.bestov.io/" target="blank"
+    title="Riccardo's blog">Riccardo P. Bestetti</a>, during an impetus caused by the terrible
+    usability of UNITN's calendar webapp (which is disgracefully shared by many other Italian
+    universities as well). If you have any cool ideas to improve it, contact me at my UNITN email
+    address. (Hint: it follows the usual format, the "P." is irrelevant.)</p>
+    <h2>Search</h2>
+    <p>Use this form to search for courses and add them to your calendar with the "+" button. You
+    can use the teacher's surname or the course name as a search term (case insensitive). Note that
+    this is not a keywork-based search, but a substring search: if you are looking for "Offensive
+    Technologies", then "offensive", "offensive tec", "fensive t" will all yield the correct
+    result; wheras "technologies offensive" will not.</p>
+    <form action="{{ url_for('builder', acc=acc) }}" method="post">
+      <input type="text" id="suggest" name="suggest" value="{{ suggest }}">
+      <button type="submit">Go!</button>
+    </form>
+    <form action="{{ url_for('builder', acc=acc) }}" method="post">
+      <input type="hidden" id="suggest" name="suggest" value="*">
+      <button type="submit">Show all courses</button>
+    </form>
+    <form action="{{ url_for('builder', acc=acc) }}" method="post">
+      <input type="hidden" id="suggest" name="suggest" value="">
+      <button type="submit">Clear search results</button>
+    </form>
+    {% if suggestions is not none %}
+    <h2>Search results</h2>
+    <p>{{ suggestions|length }} result(s) (results already in your calendar are counted but hidden)
+    </p>
+    <table>
+      <tr>
+        <th></th>
+        <th>Code</th>
+        <th>Teacher</th>
+        <th>Course</th>
+      </tr>
+      {% for code, (activity, teacher) in suggestions.items() if not code in acc %}
+      <tr>
+        <td>
+          <form action="{{ url_for('builder', acc=acc|l_with(code)) }}" method="post">
+            <input type="hidden" name="suggest" value="{{ suggest }}">
+            <button class="act-button" type="submit">+</button>
+          </form>
+        </td>
+        <td>{{ code }}</td>
+        <td>{{ teacher }}</td>
+        <td>{{ activity }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if acc|length is gt(0) %}
+    <h2>Your calendar</h2>
+    <p>This is your calendar, containing the courses you have selected so far. You can remove them
+    by using the "-" button.
+    <a href="{{ url_for('calendar', _external=True, acc=acc) }}" title="Download calendar">
+    Download it</a> in iCal format or import it (with real-time updates) in your favourite
+    software using the following link: <input type="text"
+    value="{{ url_for('calendar', _external=True, acc=acc) }}"
+    onclick="this.setSelectionRange(0, this.value.length)">
+    </p>
+    <p>{{ acc|length }} item(s) in your calendar</p>
+    <table>
+      <tr>
+        <th></th>
+        <th>Code</th>
+        <th>Teacher</th>
+        <th>Course</th>
+      </tr>
+      {% for code in acc %}
+      <tr>
+        <td>
+          <form action="{{ url_for('builder', acc=acc|l_without(code)) }}" method="post">
+            <input type="hidden" name="suggest" value="{{ suggest }}">
+            <button class="act-button" type="submit">-</button>
+          </form>
+        </td>
+        <td>{{ code }}</td>
+        <td>{{ activities[code][1] }}</td>
+        <td>{{ activities[code][0] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </body>
+</html>
