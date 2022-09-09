@@ -11,7 +11,6 @@ processes = 1
 protocol = uwsgi
 socket = 127.0.0.1:48927
 
-chmod-socket = 664
 vacuum = true
 die-on-term = true
 ```
@@ -34,5 +33,31 @@ server {
         include uwsgi_params;
     }
 }
+```
+
+La seguente unità systemd avvia uWSGI dal virtualenv del progetto:
+
+```
+[Unit]
+Description=tncal.th3game.eu uWSGI
+Requires=network.target
+After=network.target
+After=syslog.target
+
+[Service]
+TimeoutStartSec=0
+RestartSec=10
+Restart=always
+User=www-data
+Group=www-data
+KillSignal=SIGQUIT
+Type=notify
+NotifyAccess=all
+StandardError=syslog
+RuntimeDirectory=uwsgi
+ExecStart=/bin/bash -c 'cd /var/www/tncal; source venv/bin/activate; uwsgi --ini uwsgi.ini'
+
+[Install]
+WantedBy=multi-user.target
 ```
 
