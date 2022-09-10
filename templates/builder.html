@@ -49,7 +49,7 @@
     can use the teacher's surname or the course name as a search term (case insensitive). Note that
     this is not a keywork-based search, but a substring search: if you are looking for "Offensive
     Technologies", then "offensive", "offensive tec", "fensive t" will all yield the correct
-    result; wheras "technologies offensive" will not.</p>
+    result; whereas "technologies offensive" will not.</p>
     <form action="{{ url_for('builder', acc=acc) }}" method="post">
       <input type="text" id="suggest" name="suggest" value="{{ suggest }}">
       <button type="submit">Go!</button>
